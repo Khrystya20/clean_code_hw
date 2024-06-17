@@ -1,29 +1,23 @@
 package org.example.database;
 
+import org.example.database.interfaces.IItemDAO;
 import org.example.warehouse.Item;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DBItem {
+public class DBItem implements IItemDAO {
 
     final Connection connection;
     public static final String tableName = "items";
 
-    public DBItem(final String dbFile) {
-        try {
-            Class.forName("org.sqlite.JDBC");
-            this.connection = DriverManager.getConnection("jdbc:sqlite:" + dbFile);
-        } catch (ClassNotFoundException e) {
-            System.out.println("Can't load SQLite JDBC class");
-            throw new RuntimeException("Can't find class", e);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
+    public DBItem(final Connection connection) {
+        this.connection = connection;
         initItemsTable();
     }
 
+    @Override
     public void initItemsTable() {
         try {
             final Statement statement = connection.createStatement();
@@ -41,6 +35,7 @@ public class DBItem {
         }
     }
 
+    @Override
     public void dropItemsTable() {
         try {
             final Statement statement = connection.createStatement();
@@ -51,6 +46,7 @@ public class DBItem {
         }
     }
 
+    @Override
     public Item readItem(final int id) {
         try {
             final PreparedStatement selectStatement = connection.prepareStatement(
@@ -59,20 +55,20 @@ public class DBItem {
             selectStatement.execute();
             final ResultSet resultSet = selectStatement.executeQuery();
             if (resultSet.next()) {
-                Item item = new Item(resultSet.getInt("id"),
+                return new Item(resultSet.getInt("id"),
                         resultSet.getString("name"),
                         resultSet.getString("description"),
                         resultSet.getString("supplier"),
                         resultSet.getInt("stock_qty"),
                         resultSet.getDouble("price"),
                         resultSet.getInt("group_id"));
-                return item;
             } else return null;
         } catch (SQLException e) {
             throw new RuntimeException("Can't get item", e);
         }
     }
 
+    @Override
     public int addItem(final Item item) {
         if (isNameUnique(item.getName())) {
             String query = "insert into " + tableName +
@@ -95,6 +91,7 @@ public class DBItem {
         return -1;
     }
 
+    @Override
     public int updateItem(final Item item) {
         try {
             String query = "update " + tableName + " set name = ?, description = ?, supplier = ?, stock_qty = ?, price = ?, group_id = ?  where id = ?";
@@ -130,7 +127,7 @@ public class DBItem {
         }
     }
 
-    // check whether the name is unique
+    @Override
     public boolean isNameUnique(final String itemName) {
         try {
             final Statement statement = connection.createStatement();
@@ -144,11 +141,11 @@ public class DBItem {
         }
     }
 
+    @Override
     public int deleteItem(final int id) {
         try {
             String query = "delete from " + tableName + " where id = ?";
-            final PreparedStatement deleteStatement =
-                    connection.prepareStatement(query);
+            final PreparedStatement deleteStatement = connection.prepareStatement(query);
             deleteStatement.setInt(1, id);
             int isDeleted = deleteStatement.executeUpdate();
             if (isDeleted == 1) {
@@ -161,6 +158,7 @@ public class DBItem {
         }
     }
 
+    @Override
     public void deleteAllItemsInGroup(final int groupId) {
         try {
             final Statement statement = connection.createStatement();
@@ -171,7 +169,8 @@ public class DBItem {
         }
     }
 
-    public List<Item> getAllItemsFromGroup(final int groupId){
+    @Override
+    public List<Item> getAllItemsFromGroup(final int groupId) {
         List<Item> itemsFromGroup = new ArrayList<>();
         try {
             final PreparedStatement selectStatement = connection.prepareStatement(
@@ -195,7 +194,8 @@ public class DBItem {
         }
     }
 
-    public List<Item> getAllItemsWithPrice(final double fromPrice, final double toPrice){
+    @Override
+    public List<Item> getAllItemsWithPrice(final double fromPrice, final double toPrice) {
         List<Item> itemsWithSpecificPrice = new ArrayList<>();
         try {
             final PreparedStatement selectStatement = connection.prepareStatement(
@@ -220,7 +220,8 @@ public class DBItem {
         }
     }
 
-    public List<Item> getAllItemsWithSupplier(String supplier){
+    @Override
+    public List<Item> getAllItemsWithSupplier(String supplier) {
         List<Item> itemsWithSpecificSupplier = new ArrayList<>();
         try {
             final PreparedStatement selectStatement = connection.prepareStatement(
@@ -244,7 +245,8 @@ public class DBItem {
         }
     }
 
-    public List<Item> getAllItemsWithLowStock(final int lowStock){
+    @Override
+    public List<Item> getAllItemsWithLowStock(final int lowStock) {
         List<Item> itemsWithLowStock = new ArrayList<>();
         try {
             final PreparedStatement selectStatement = connection.prepareStatement(
@@ -267,14 +269,4 @@ public class DBItem {
             throw new RuntimeException("Can't get items", e);
         }
     }
-
-    public void close() {
-        try {
-            connection.close();
-            System.out.println("Connection closed");
-        } catch (SQLException ex) {
-            System.out.println(ex.getMessage());
-        }
-    }
-
 }

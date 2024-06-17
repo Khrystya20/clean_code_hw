@@ -1,41 +1,41 @@
 package org.example;
 
-import org.example.database.DBGroup;
-import org.example.database.DBItem;
-import org.example.packetProcessing.Processor;
+import org.example.database.DAOFactory;
+import org.example.database.interfaces.IGroupDAO;
+import org.example.database.interfaces.IItemDAO;
 import org.example.warehouse.Group;
 import org.example.warehouse.Item;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 public class DBItemTest {
-    private DBGroup dbGroup;
-    private DBItem dbItem;
+    private IGroupDAO dbGroup;
+    private IItemDAO dbItem;
+    private DAOFactory factory;
 
     @Before
     public void setUp() {
-        dbGroup = new DBGroup(Processor.dbFile);
+        factory = new DAOFactory("data.db");
+        dbGroup = factory.createGroupDAO();
         dbGroup.dropGroupsTable();
         dbGroup.initGroupsTable();
 
-        dbItem = new DBItem(Processor.dbFile);
+        dbItem = factory.createItemDAO();
         dbItem.dropItemsTable();
         dbItem.initItemsTable();
     }
 
     @After
     public void tearDown() {
-        dbItem.close();
-        dbGroup.close();
+        factory.close();
     }
 
     @Test
     public void testCreatingItem() {
         int groupId = dbGroup.addGroup(new Group("молочні продукти", "молочні продукти"));
-        dbGroup.close();
-        dbGroup = new DBGroup(Processor.dbFile);
 
         Item item = new Item("молоко", "свіже молоко", "Постачальник 1", 100, 20.5, groupId);
         int id = dbItem.addItem(item);
@@ -46,8 +46,6 @@ public class DBItemTest {
     @Test
     public void testGettingItem() {
         int groupId = dbGroup.addGroup(new Group("молочні продукти", "молочні продукти"));
-        dbGroup.close();
-        dbGroup = new DBGroup(Processor.dbFile);
 
         Item item = new Item("молоко", "свіже молоко", "Постачальник 1", 100, 20.5, groupId);
         int id = dbItem.addItem(item);
@@ -60,8 +58,6 @@ public class DBItemTest {
     @Test
     public void testUpdatingItem() {
         int groupId = dbGroup.addGroup(new Group("молочні продукти", "молочні продукти"));
-        dbGroup.close();
-        dbGroup = new DBGroup(Processor.dbFile);
 
         Item item = new Item("молоко", "свіже молоко", "Постачальник 1", 100, 20.5, groupId);
         int id = dbItem.addItem(item);
@@ -76,8 +72,6 @@ public class DBItemTest {
     @Test
     public void testDeletingItem() {
         int groupId = dbGroup.addGroup(new Group("молочні продукти", "молочні продукти"));
-        dbGroup.close();
-        dbGroup = new DBGroup(Processor.dbFile);
 
         Item item = new Item("молоко", "свіже молоко", "Постачальник 1", 100, 20.5, groupId);
         int id = dbItem.addItem(item);
@@ -90,8 +84,6 @@ public class DBItemTest {
     @Test
     public void testAddItemWithDuplicateName() {
         int groupId = dbGroup.addGroup(new Group("молочні продукти", "молочні продукти"));
-        dbGroup.close();
-        dbGroup = new DBGroup(Processor.dbFile);
 
         Item item1 = new Item("молоко", "свіже молоко", "Постачальник 1", 100, 20.5, groupId);
         int id1 = dbItem.addItem(item1);
@@ -104,8 +96,6 @@ public class DBItemTest {
     @Test
     public void testUpdateItemWithNonUniqueName() {
         int groupId = dbGroup.addGroup(new Group("молочні продукти", "молочні продукти"));
-        dbGroup.close();
-        dbGroup = new DBGroup(Processor.dbFile);
 
         Item item1 = new Item("молоко", "свіже молоко", "Постачальник 1", 100, 20.5, groupId);
         int id1 = dbItem.addItem(item1);
@@ -121,8 +111,6 @@ public class DBItemTest {
     @Test
     public void testUpdateNonExistentItem() {
         int groupId = dbGroup.addGroup(new Group("молочні продукти", "молочні продукти"));
-        dbGroup.close();
-        dbGroup = new DBGroup(Processor.dbFile);
 
         Item item = new Item(999, "сир", "різні види сирів", "Постачальник 3", 200, 30.0, groupId);
         int result = dbItem.updateItem(item);

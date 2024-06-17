@@ -1,26 +1,29 @@
 package org.example;
 
-import org.example.database.DBGroup;
-import org.example.packetProcessing.Processor;
+import org.example.database.DAOFactory;
+import org.example.database.interfaces.IGroupDAO;
 import org.example.warehouse.Group;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 public class DBGroupTest {
-    private DBGroup dbGroup;
+    private IGroupDAO dbGroup;
+    private DAOFactory factory;
 
     @Before
     public void setUp() {
-        dbGroup = new DBGroup(Processor.dbFile);
+        factory = new DAOFactory("data.db");
+        dbGroup = factory.createGroupDAO();
         dbGroup.dropGroupsTable();
         dbGroup.initGroupsTable();
     }
 
     @After
     public void tearDown() {
-        dbGroup.close();
+        factory.close();
     }
 
     @Test

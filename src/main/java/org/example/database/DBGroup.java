@@ -1,27 +1,21 @@
 package org.example.database;
 
+import org.example.database.interfaces.IGroupDAO;
 import org.example.warehouse.Group;
+
 import java.sql.*;
 
-public class DBGroup {
+public class DBGroup implements IGroupDAO {
 
     private final Connection connection;
     public static final String tableName = "groups";
 
-    public DBGroup(final String dbFile) {
-        try {
-            Class.forName("org.sqlite.JDBC");
-            this.connection = DriverManager.getConnection("jdbc:sqlite:" + dbFile);
-        } catch (ClassNotFoundException e) {
-            System.out.println("Can't load SQLite JDBC class");
-            throw new RuntimeException("Can't find class", e);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
+    public DBGroup(final Connection connection) {
+        this.connection = connection;
         initGroupsTable();
     }
 
+    @Override
     public void initGroupsTable() {
         try {
             final Statement statement = connection.createStatement();
@@ -34,6 +28,7 @@ public class DBGroup {
         }
     }
 
+    @Override
     public void dropGroupsTable() {
         try {
             final Statement statement = connection.createStatement();
@@ -44,6 +39,7 @@ public class DBGroup {
         }
     }
 
+    @Override
     public Group readGroup(final int id) {
         try {
             final PreparedStatement selectStatement = connection.prepareStatement(
@@ -52,16 +48,16 @@ public class DBGroup {
             selectStatement.execute();
             final ResultSet resultSet = selectStatement.executeQuery();
             if (resultSet.next()) {
-                Group group = new Group(resultSet.getInt("id"),
+                return new Group(resultSet.getInt("id"),
                         resultSet.getString("name"),
                         resultSet.getString("description"));
-                return group;
             } else return null;
         } catch (SQLException e) {
             throw new RuntimeException("Can't get group", e);
         }
     }
 
+    @Override
     public int addGroup(final Group group) {
         if (isNameUnique(group.getName())) {
             String query = "insert into " + tableName
@@ -80,6 +76,7 @@ public class DBGroup {
         return -1;
     }
 
+    @Override
     public int updateGroup(final Group group) {
         try {
             String query = "update " + tableName + " set name = ?, description = ?  where id = ?";
@@ -111,7 +108,7 @@ public class DBGroup {
         }
     }
 
-    // check whether the name is unique
+    @Override
     public boolean isNameUnique(final String groupName) {
         try {
             final Statement statement = connection.createStatement();
@@ -125,6 +122,7 @@ public class DBGroup {
         }
     }
 
+    @Override
     public int deleteGroup(final int id) {
         try {
             String query = "delete from " + tableName + " where id = ?";
@@ -141,15 +139,7 @@ public class DBGroup {
         }
     }
 
-    public void close() {
-        try {
-            connection.close();
-            System.out.println("Connection closed");
-        } catch (SQLException ex) {
-            System.out.println(ex.getMessage());
-        }
-    }
-
+    @Override
     public Group getGroupByName(String name) {
         try {
             final PreparedStatement selectStatement = connection.prepareStatement(
@@ -158,10 +148,9 @@ public class DBGroup {
             selectStatement.execute();
             final ResultSet resultSet = selectStatement.executeQuery();
             if (resultSet.next()) {
-                Group group = new Group(resultSet.getInt("id"),
+                return new Group(resultSet.getInt("id"),
                         resultSet.getString("name"),
                         resultSet.getString("description"));
-                return group;
             } else return null;
         } catch (SQLException e) {
             throw new RuntimeException("Can't get group", e);
