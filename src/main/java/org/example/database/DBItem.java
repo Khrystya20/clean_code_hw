@@ -24,7 +24,7 @@ public class DBItem {
         initItemsTable();
     }
 
-    private void initItemsTable() {
+    public void initItemsTable() {
         try {
             final Statement statement = connection.createStatement();
             String query = "create table if not exists " + tableName +

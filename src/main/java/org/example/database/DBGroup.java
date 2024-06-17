@@ -22,7 +22,7 @@ public class DBGroup {
         initGroupsTable();
     }
 
-    private void initGroupsTable() {
+    public void initGroupsTable() {
         try {
             final Statement statement = connection.createStatement();
             String query = "create table if not exists " + tableName +
@@ -150,4 +150,21 @@ public class DBGroup {
         }
     }
 
+    public Group getGroupByName(String name) {
+        try {
+            final PreparedStatement selectStatement = connection.prepareStatement(
+                    "select * from " + tableName + " where name = ?");
+            selectStatement.setString(1, name);
+            selectStatement.execute();
+            final ResultSet resultSet = selectStatement.executeQuery();
+            if (resultSet.next()) {
+                Group group = new Group(resultSet.getInt("id"),
+                        resultSet.getString("name"),
+                        resultSet.getString("description"));
+                return group;
+            } else return null;
+        } catch (SQLException e) {
+            throw new RuntimeException("Can't get group", e);
+        }
+    }
 }
