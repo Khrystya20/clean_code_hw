@@ -1,5 +1,7 @@
 package org.example.packet;
 import lombok.Data;
+import org.example.util.MyCipher;
+
 import java.nio.ByteBuffer;
 
 @Data
